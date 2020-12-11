@@ -4,13 +4,11 @@ networks:
   laravel:
 
 services:
-  site:
-    build:
-      context: .
-      dockerfile: nginx.dockerfile
+  nginx:
+    image: jhonoryza/nginx:laravel-alpine
     container_name: nginx
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - ./src:/var/www/html:delegated
     depends_on:
@@ -26,6 +24,8 @@ services:
     tty: true
     ports:
       - "3306"
+    volumes:
+      - ~/docker/data/mostbackend:/var/lib/mysql
     environment:
       MYSQL_DATABASE: homestead
       MYSQL_USER: homestead
@@ -37,24 +37,24 @@ services:
       - laravel
 
   php:
-    build:
-      context: .
-      dockerfile: php.dockerfile
+    image: jhonoryza/php:ubuntu-7.4
     container_name: php
     volumes:
       - ./src:/var/www/html:delegated
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+      # - ./php/auth.json:/root/.composer/auth.json
     ports:
-      - "9000"
+      - "9000:9000"
     networks:
       - laravel
 
   composer:
-    build:
-      context: .
-      dockerfile: composer.dockerfile
+    image: jhonoryza/php:ubuntu-7.4
     container_name: composer
     volumes:
       - ./src:/var/www/html
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+      - ./php/auth.json:/home/laravel/.composer/auth.json
     working_dir: /var/www/html
     depends_on:
       - php
@@ -72,16 +72,24 @@ services:
     entrypoint: ['npm']
 
   artisan:
-    build:
-      context: .
-      dockerfile: php.dockerfile
+    image: jhonoryza/php:ubuntu-7.4
     container_name: artisan
     volumes:
       - ./src:/var/www/html:delegated
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+      - ./php/auth.json:/root/.composer/auth.json
     depends_on:
       - mysql
     working_dir: /var/www/html
     user: laravel
     entrypoint: ['php', '/var/www/html/artisan']
+    networks:
+      - laravel
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    volumes:
+      - ~/docker/redis/mostbackend:/var/lib/redis
     networks:
       - laravel
