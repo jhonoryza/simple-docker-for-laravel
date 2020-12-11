@@ -1,6 +1,5 @@
 .DS_Store
 .idea
 .vscode
-src/*
+src/
 php/auth.json
-src/README.md
